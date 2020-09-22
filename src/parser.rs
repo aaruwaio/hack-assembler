@@ -59,6 +59,10 @@ impl Parser {
     pub fn symbol(&self) -> String {
         self.current_command.clone().replace("@", "")
     }
+
+    // pub fn dest(&self) -> String{
+
+    // }
 }
 
 #[cfg(test)]
