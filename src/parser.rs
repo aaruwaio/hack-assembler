@@ -1,6 +1,12 @@
 use std::io::prelude::*;
 use std::io::BufReader;
 
+#[derive(Debug, PartialEq)]
+pub enum CommandType {
+    A_COMMAND,
+    C_COMMAND,
+}
+
 #[derive(Debug)]
 pub struct Parser {
     pub stream: BufReader<std::fs::File>,
@@ -42,6 +48,13 @@ impl Parser {
             }
         }
     }
+
+    pub fn command_type(&self) -> CommandType {
+        match self.current_command.chars().nth(0).unwrap() {
+            '@' => CommandType::A_COMMAND,
+            _ => CommandType::C_COMMAND,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -50,10 +63,14 @@ mod tests {
     use std::fs::File;
     use std::io::BufReader;
 
+    fn create_parser_instance() -> Parser {
+        let stream = BufReader::new(File::open("example/add/Add.asm").unwrap());
+        Parser::new(stream)
+    }
+
     #[test]
     fn advance_test() {
-        let stream = BufReader::new(File::open("test/add/Add.asm").unwrap());
-        let mut p = Parser::new(stream);
+        let mut p = create_parser_instance();
         p.advance();
         assert_eq!("@2", p.current_command);
         p.advance();
@@ -68,5 +85,14 @@ mod tests {
         assert_eq!("M=D", p.current_command);
         p.advance();
         assert_eq!(false, p.has_more_commands);
+    }
+
+    #[test]
+    fn command_type_test() {
+        let mut p = create_parser_instance();
+        p.advance();
+        assert_eq!(CommandType::A_COMMAND, p.command_type());
+        p.advance();
+        assert_eq!(CommandType::C_COMMAND, p.command_type());
     }
 }
