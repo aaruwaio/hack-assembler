@@ -55,6 +55,10 @@ impl Parser {
             _ => CommandType::C_COMMAND,
         }
     }
+
+    pub fn symbol(&self) -> String {
+        self.current_command.clone().replace("@", "")
+    }
 }
 
 #[cfg(test)]
@@ -94,5 +98,12 @@ mod tests {
         assert_eq!(CommandType::A_COMMAND, p.command_type());
         p.advance();
         assert_eq!(CommandType::C_COMMAND, p.command_type());
+    }
+
+    #[test]
+    fn symbol_test() {
+        let mut p = create_parser_instance();
+        p.advance();
+        assert_eq!("2", p.symbol());
     }
 }
