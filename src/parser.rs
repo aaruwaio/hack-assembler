@@ -1,5 +1,8 @@
+use regex::Regex;
 use std::io::prelude::*;
 use std::io::BufReader;
+
+const DEST_REGEX: &str = r"null=+|M=+|D=+|MD=+|A=+|AM=+|AD=+|AMD=+";
 
 #[derive(Debug, PartialEq)]
 pub enum CommandType {
@@ -60,9 +63,11 @@ impl Parser {
         self.current_command.clone().replace("@", "")
     }
 
-    // pub fn dest(&self) -> String{
-
-    // }
+    pub fn dest(&self) -> String {
+        let re = Regex::new(DEST_REGEX).unwrap();
+        let caps = re.captures(&self.current_command).unwrap();
+        caps.get(0).map_or("", |m| m.as_str()).replace("=", "")
+    }
 }
 
 #[cfg(test)]
@@ -107,7 +112,16 @@ mod tests {
     #[test]
     fn symbol_test() {
         let mut p = create_parser_instance();
-        p.advance();
+        p.current_command = "@2".to_string();
         assert_eq!("2", p.symbol());
+    }
+
+    #[test]
+    fn dest_test() {
+        let mut p = create_parser_instance();
+        p.current_command = "null=hoge".to_string();
+        assert_eq!("null", p.dest());
+        p.current_command = "M=hoge".to_string();
+        assert_eq!("M", p.dest());
     }
 }
