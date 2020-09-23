@@ -4,6 +4,7 @@ use std::io::BufReader;
 
 const DEST_REGEX: &str = r"null=+|M=+|D=+|MD=+|A=+|AM=+|AD=+|AMD=+";
 const COMP_REGEX: &str = r"=0$|=1$|=-1$|=D$|=A$|=!D$|=!A$|=-D$|=-A$|=D\+1$|=A\+1$|=D-1$|=A-1$|=D\+A$|=D-A$|=A-D$|=D&A$|=D\|A$|=M$|=!M$|=-M$|=M\+1$|=M-1$|=D\+M$|=D-M$|=M-D$|=D&M$|=D\|M$|0;|1;|-1;|D;|A;|!D;|!A;|-D;|-A;|D\+1;|A\+1;|D-1;|A-1;|D\+A;|D-A;|A-D;|D&A;|D\|A;|M;|!M;|-M;|M\+1;|M-1;|D\+M;|D-M;|M-D;|D&M;|D\|M;";
+const JUMP_REGEX: &str = r";null|;JGT|;JEQ|;JGE|;JLT|;JNE|;JLE|;JMP";
 
 #[derive(Debug, PartialEq)]
 pub enum CommandType {
@@ -78,6 +79,12 @@ impl Parser {
             .replace("=", "")
             .replace(";", "")
     }
+
+    pub fn jump(&self) -> String {
+        let re = Regex::new(JUMP_REGEX).unwrap();
+        let caps = re.captures(&self.current_command).unwrap();
+        caps.get(0).map_or("", |m| m.as_str()).replace(";", "")
+    }
 }
 
 #[cfg(test)]
@@ -150,5 +157,14 @@ mod tests {
         assert_eq!("D&A", p.comp());
         p.current_command = "D=-M".to_string();
         assert_eq!("-M", p.comp());
+    }
+
+    #[test]
+    fn jump_test() {
+        let mut p = create_parser_instance();
+        p.current_command = "D;JGT".to_string();
+        assert_eq!("JGT", p.jump());
+        p.current_command = "0;JMP".to_string();
+        assert_eq!("JMP", p.jump());
     }
 }
