@@ -3,6 +3,7 @@ use std::io::prelude::*;
 use std::io::BufReader;
 
 const DEST_REGEX: &str = r"null=+|M=+|D=+|MD=+|A=+|AM=+|AD=+|AMD=+";
+const COMP_REGEX: &str = r"=0$|=1$|=-1$|=D$|=A$|=!D$|=!A$|=-D$|=-A$|=D\+1$|=A\+1$|=D-1$|=A-1$|=D\+A$|=D-A$|=A-D$|=D&A$|=D\|A$|=M$|=!M$|=-M$|=M\+1$|=M-1$|=D\+M$|=D-M$|=M-D$|=D&M$|=D\|M$|0;|1;|-1;|D;|A;|!D;|!A;|-D;|-A;|D\+1;|A\+1;|D-1;|A-1;|D\+A;|D-A;|A-D;|D&A;|D\|A;|M;|!M;|-M;|M\+1;|M-1;|D\+M;|D-M;|M-D;|D&M;|D\|M;";
 
 #[derive(Debug, PartialEq)]
 pub enum CommandType {
@@ -68,6 +69,15 @@ impl Parser {
         let caps = re.captures(&self.current_command).unwrap();
         caps.get(0).map_or("", |m| m.as_str()).replace("=", "")
     }
+
+    pub fn comp(&self) -> String {
+        let re = Regex::new(COMP_REGEX).unwrap();
+        let caps = re.captures(&self.current_command).unwrap();
+        caps.get(0)
+            .map_or("", |m| m.as_str())
+            .replace("=", "")
+            .replace(";", "")
+    }
 }
 
 #[cfg(test)]
@@ -119,9 +129,26 @@ mod tests {
     #[test]
     fn dest_test() {
         let mut p = create_parser_instance();
-        p.current_command = "null=hoge".to_string();
+        p.current_command = "null=D-A".to_string();
         assert_eq!("null", p.dest());
-        p.current_command = "M=hoge".to_string();
+        p.current_command = "M=M+1".to_string();
         assert_eq!("M", p.dest());
+    }
+
+    #[test]
+    fn comp_test() {
+        let mut p = create_parser_instance();
+        p.current_command = "D=M".to_string();
+        assert_eq!("M", p.comp());
+        p.current_command = "0;JMP".to_string();
+        assert_eq!("0", p.comp());
+        p.current_command = "M=M+1".to_string();
+        assert_eq!("M+1", p.comp());
+        p.current_command = "D=D|A".to_string();
+        assert_eq!("D|A", p.comp());
+        p.current_command = "D=D&A".to_string();
+        assert_eq!("D&A", p.comp());
+        p.current_command = "D=-M".to_string();
+        assert_eq!("-M", p.comp());
     }
 }
