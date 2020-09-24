@@ -68,14 +68,18 @@ impl Parser {
     pub fn dest(&self) -> String {
         let re = Regex::new(DEST_REGEX).unwrap();
         let caps = re.captures(&self.current_command).unwrap();
-        caps.get(0).map_or("", |m| m.as_str()).replace("=", "")
+        caps.get(0)
+            .expect("Unexpected character in input")
+            .as_str()
+            .replace("=", "")
     }
 
     pub fn comp(&self) -> String {
         let re = Regex::new(COMP_REGEX).unwrap();
         let caps = re.captures(&self.current_command).unwrap();
         caps.get(0)
-            .map_or("", |m| m.as_str())
+            .expect("Unexpected character in input")
+            .as_str()
             .replace("=", "")
             .replace(";", "")
     }
@@ -83,7 +87,10 @@ impl Parser {
     pub fn jump(&self) -> String {
         let re = Regex::new(JUMP_REGEX).unwrap();
         let caps = re.captures(&self.current_command).unwrap();
-        caps.get(0).map_or("", |m| m.as_str()).replace(";", "")
+        caps.get(0)
+            .expect("Unexpected character in input")
+            .as_str()
+            .replace(";", "")
     }
 }
 
@@ -140,6 +147,16 @@ mod tests {
         assert_eq!("null", p.dest());
         p.current_command = "M=M+1".to_string();
         assert_eq!("M", p.dest());
+    }
+
+    #[test]
+    #[should_panic]
+    fn unexpected_input_test() {
+        let mut p = create_parser_instance();
+        p.current_command = "hoge".to_string();
+        p.dest();
+        p.comp();
+        p.jump();
     }
 
     #[test]
