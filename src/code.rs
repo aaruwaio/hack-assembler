@@ -45,6 +45,18 @@ lazy_static! {
         m.insert("D|M", "1010101");
         m
     };
+    pub static ref JUMP_MAP: HashMap<&'static str, &'static str> = {
+        let mut m = HashMap::new();
+        m.insert("null", "000");
+        m.insert("JGT", "001");
+        m.insert("JEQ", "010");
+        m.insert("JGE", "011");
+        m.insert("JLT", "100");
+        m.insert("JNE", "101");
+        m.insert("JLE", "110");
+        m.insert("JMP", "111");
+        m
+    };
 }
 
 pub fn dest(mnemonic: String) -> String {
@@ -55,6 +67,11 @@ pub fn dest(mnemonic: String) -> String {
 pub fn comp(mnemonic: String) -> String {
     let key: &str = &mnemonic;
     (*(COMP_MAP.get(key).unwrap())).to_string()
+}
+
+pub fn jump(mnemonic: String) -> String {
+    let key: &str = &mnemonic;
+    (*(JUMP_MAP.get(key).unwrap())).to_string()
 }
 
 #[cfg(test)]
@@ -71,5 +88,11 @@ mod tests {
     fn comp_test() {
         assert_eq!("0101010", comp("0".to_string()));
         assert_eq!("1110111", comp("M+1".to_string()));
+    }
+
+    #[test]
+    fn jump_test() {
+        assert_eq!("000", jump("null".to_string()));
+        assert_eq!("111", jump("JMP".to_string()));
     }
 }
