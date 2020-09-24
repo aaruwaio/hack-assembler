@@ -15,4 +15,17 @@ lazy_static! {
     };
 }
 
-// pub fn dest(mnemonic: String) -> String {}
+pub fn dest(mnemonic: String) -> String {
+    let key: &str = &mnemonic;
+    (*(DEST_MAP.get(key).unwrap())).to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dest_test() {
+        assert_eq!("000", dest("null".to_string()));
+    }
+}
