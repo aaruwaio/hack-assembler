@@ -60,16 +60,25 @@ lazy_static! {
 }
 
 pub fn dest(mnemonic: String) -> String {
+    if mnemonic == "" {
+        return "".to_string();
+    }
     let key: &str = &mnemonic;
     (*(DEST_MAP.get(key).unwrap())).to_string()
 }
 
 pub fn comp(mnemonic: String) -> String {
+    if mnemonic == "" {
+        return "".to_string();
+    }
     let key: &str = &mnemonic;
     (*(COMP_MAP.get(key).unwrap())).to_string()
 }
 
 pub fn jump(mnemonic: String) -> String {
+    if mnemonic == "" {
+        return "".to_string();
+    }
     let key: &str = &mnemonic;
     (*(JUMP_MAP.get(key).unwrap())).to_string()
 }
@@ -82,17 +91,20 @@ mod tests {
     fn dest_test() {
         assert_eq!("000", dest("null".to_string()));
         assert_eq!("001", dest("M".to_string()));
+        assert_eq!("", dest("".to_string()));
     }
 
     #[test]
     fn comp_test() {
         assert_eq!("0101010", comp("0".to_string()));
         assert_eq!("1110111", comp("M+1".to_string()));
+        assert_eq!("", comp("".to_string()));
     }
 
     #[test]
     fn jump_test() {
         assert_eq!("000", jump("null".to_string()));
         assert_eq!("111", jump("JMP".to_string()));
+        assert_eq!("", jump("".to_string()));
     }
 }
