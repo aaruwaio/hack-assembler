@@ -14,5 +14,17 @@ fn main() {
     let b = "test".as_bytes();
     output_file.write(b).unwrap();
 
-    let parser = parser::Parser::new(input_file);
+    let mut parser = parser::Parser::new(input_file);
+
+    loop {
+        parser.advance();
+        if !parser.has_more_commands {
+            break;
+        }
+
+        match parser.command_type() {
+            parser::CommandType::Acommand => (),
+            parser::CommandType::Ccommand => (),
+        }
+    }
 }
