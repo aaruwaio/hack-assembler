@@ -11,9 +11,6 @@ fn main() {
     let output_file_name = input_file_name.replace("asm", "hack");
     let mut output_file = BufWriter::new(fs::File::create(output_file_name).unwrap());
 
-    let b = "test".as_bytes();
-    output_file.write(b).unwrap();
-
     let mut parser = parser::Parser::new(input_file);
 
     loop {
@@ -23,8 +20,16 @@ fn main() {
         }
 
         match parser.command_type() {
-            parser::CommandType::Acommand => (),
-            parser::CommandType::Ccommand => (),
-        }
+            parser::CommandType::Acommand => {
+                output_file.write(parser.symbol().as_bytes()).unwrap();
+            }
+            parser::CommandType::Ccommand => {
+                output_file
+                    .write(code::dest(parser.dest()).as_bytes())
+                    .unwrap();
+            }
+        };
+
+        // output_file.write(binary_code).unwrap();
     }
 }

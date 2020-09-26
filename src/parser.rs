@@ -67,29 +67,23 @@ impl Parser {
 
     pub fn dest(&self) -> String {
         let re = Regex::new(DEST_REGEX).unwrap();
-        let caps = re.captures(&self.current_command).unwrap();
-        caps.get(0)
-            .expect("Unexpected character in input")
-            .as_str()
+        re.captures(&self.current_command)
+            .map_or("", |m| m.get(0).unwrap().as_str())
             .replace("=", "")
     }
 
     pub fn comp(&self) -> String {
         let re = Regex::new(COMP_REGEX).unwrap();
-        let caps = re.captures(&self.current_command).unwrap();
-        caps.get(0)
-            .expect("Unexpected character in input")
-            .as_str()
+        re.captures(&self.current_command)
+            .map_or("", |m| m.get(0).unwrap().as_str())
             .replace("=", "")
             .replace(";", "")
     }
 
     pub fn jump(&self) -> String {
         let re = Regex::new(JUMP_REGEX).unwrap();
-        let caps = re.captures(&self.current_command).unwrap();
-        caps.get(0)
-            .expect("Unexpected character in input")
-            .as_str()
+        re.captures(&self.current_command)
+            .map_or("", |m| m.get(0).unwrap().as_str())
             .replace(";", "")
     }
 }
@@ -147,16 +141,8 @@ mod tests {
         assert_eq!("null", p.dest());
         p.current_command = "M=M+1".to_string();
         assert_eq!("M", p.dest());
-    }
-
-    #[test]
-    #[should_panic]
-    fn unexpected_input_test() {
-        let mut p = create_parser_instance();
-        p.current_command = "hoge".to_string();
-        p.dest();
-        p.comp();
-        p.jump();
+        p.current_command = "hoge=huga+hoge".to_string();
+        assert_eq!("", p.dest());
     }
 
     #[test]
@@ -164,16 +150,12 @@ mod tests {
         let mut p = create_parser_instance();
         p.current_command = "D=M".to_string();
         assert_eq!("M", p.comp());
-        p.current_command = "0;JMP".to_string();
-        assert_eq!("0", p.comp());
         p.current_command = "M=M+1".to_string();
         assert_eq!("M+1", p.comp());
-        p.current_command = "D=D|A".to_string();
-        assert_eq!("D|A", p.comp());
         p.current_command = "D=D&A".to_string();
         assert_eq!("D&A", p.comp());
-        p.current_command = "D=-M".to_string();
-        assert_eq!("-M", p.comp());
+        p.current_command = "hoge=huga+hoge".to_string();
+        assert_eq!("", p.comp());
     }
 
     #[test]
@@ -183,5 +165,7 @@ mod tests {
         assert_eq!("JGT", p.jump());
         p.current_command = "0;JMP".to_string();
         assert_eq!("JMP", p.jump());
+        p.current_command = "hoge=huga+hoge".to_string();
+        assert_eq!("", p.jump());
     }
 }
