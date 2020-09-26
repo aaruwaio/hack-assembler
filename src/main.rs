@@ -21,15 +21,19 @@ fn main() {
 
         match parser.command_type() {
             parser::CommandType::Acommand => {
-                output_file.write(parser.symbol().as_bytes()).unwrap();
+                let dec_num: i32 = parser.symbol().parse().unwrap();
+                let bin_num = format!("{:0>16b}\n", dec_num);
+                output_file.write(bin_num.as_bytes()).unwrap();
             }
             parser::CommandType::Ccommand => {
-                output_file
-                    .write(code::dest(parser.dest()).as_bytes())
-                    .unwrap();
+                let bin_code = format!(
+                    "111{}{}{}\n",
+                    code::comp(parser.comp()),
+                    code::dest(parser.dest()),
+                    code::jump(parser.jump()),
+                );
+                output_file.write(bin_code.as_bytes()).unwrap();
             }
         };
-
-        // output_file.write(binary_code).unwrap();
     }
 }
