@@ -5,11 +5,13 @@ use std::io::BufReader;
 const DEST_REGEX: &str = r"null=+|M=+|D=+|MD=+|A=+|AM=+|AD=+|AMD=+";
 const COMP_REGEX: &str = r"=0$|=1$|=-1$|=D$|=A$|=!D$|=!A$|=-D$|=-A$|=D\+1$|=A\+1$|=D-1$|=A-1$|=D\+A$|=D-A$|=A-D$|=D&A$|=D\|A$|=M$|=!M$|=-M$|=M\+1$|=M-1$|=D\+M$|=D-M$|=M-D$|=D&M$|=D\|M$|0;|1;|-1;|D;|A;|!D;|!A;|-D;|-A;|D\+1;|A\+1;|D-1;|A-1;|D\+A;|D-A;|A-D;|D&A;|D\|A;|M;|!M;|-M;|M\+1;|M-1;|D\+M;|D-M;|M-D;|D&M;|D\|M;";
 const JUMP_REGEX: &str = r";null|;JGT|;JEQ|;JGE|;JLT|;JNE|;JLE|;JMP";
+const COMMENT_REGEX: &str = r"//.*";
 
 #[derive(Debug, PartialEq)]
 pub enum CommandType {
     Acommand,
     Ccommand,
+    Lcommand,
 }
 
 #[derive(Debug)]
@@ -29,6 +31,7 @@ impl Parser {
     }
 
     pub fn advance(&mut self) {
+        let re = Regex::new(COMMENT_REGEX).unwrap();
         loop {
             let mut buf = String::new();
             self.stream.read_line(&mut buf).unwrap();
@@ -37,19 +40,19 @@ impl Parser {
                 self.has_more_commands = false;
                 break;
             }
+
             //改行文字、空白の削除
             buf = buf.trim().replace(" ", "").to_string();
+
+            //コメントの削除
+            buf = re.replace(&buf, "").to_string();
+
             //空白の行はスキップ
             if buf.is_empty() {
                 continue;
-            }
-            //コメント行はスキップ
-            match buf.find("//") {
-                Some(_) => continue,
-                None => {
-                    self.current_command = buf;
-                    break;
-                }
+            } else {
+                self.current_command = buf;
+                break;
             }
         }
     }
@@ -57,12 +60,17 @@ impl Parser {
     pub fn command_type(&self) -> CommandType {
         match self.current_command.chars().nth(0).unwrap() {
             '@' => CommandType::Acommand,
+            '(' => CommandType::Lcommand,
             _ => CommandType::Ccommand,
         }
     }
 
     pub fn symbol(&self) -> String {
-        self.current_command.clone().replace("@", "")
+        self.current_command
+            .clone()
+            .replace("@", "")
+            .replace("(", "")
+            .replace(")", "")
     }
 
     pub fn dest(&self) -> String {
